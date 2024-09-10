@@ -1,4 +1,6 @@
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 public class LongestCommonSubsequence {
     public static int lcsLengthDC(String X, String Y, int m, int n) {
@@ -48,45 +50,6 @@ public class LongestCommonSubsequence {
         return C[m][n];
     }
 
-    public static int countLCS(String X, String Y) {
-        int m = X.length();
-        int n = Y.length();
-        int[][] C = new int[m + 1][n + 1];
-
-        for (int i = 0; i <= m; i++) {
-            for (int j = 0; j <= n; j++) {
-                if (i == 0 || j == 0)
-                    C[i][j] = 0;
-                else if (X.charAt(i - 1) == Y.charAt(j - 1))
-                    C[i][j] = C[i - 1][j - 1] + 1;
-                else
-                    C[i][j] = Math.max(C[i - 1][j], C[i][j - 1]);
-            }
-        }
-    
-        int lcsLength = C[m][n];
-    
-        return countLCSHelper(C, X, Y, m, n, lcsLength);
-    }
-    
-    private static int countLCSHelper(int[][] C, String X, String Y, int i, int j, int length) {
-        if (length == 0)
-            return 1;
-        if (i == 0 || j == 0)
-            return 0;
-    
-        if (X.charAt(i - 1) == Y.charAt(j - 1))
-            return countLCSHelper(C, X, Y, i - 1, j - 1, length - 1);
-        
-        int count = 0;
-        if (C[i - 1][j] >= length)
-            count += countLCSHelper(C, X, Y, i - 1, j, length);
-        if (C[i][j - 1] >= length)
-            count += countLCSHelper(C, X, Y, i, j - 1, length);
-        
-        return count;
-    }
-
     private static void printLCS(String[][] b, String X, int i, int j) {
         if (i == 0 || j == 0)
             return;
@@ -112,6 +75,50 @@ public class LongestCommonSubsequence {
             printLCSWithoutB(C, X, Y, i, j - 1);
         }
     }
+    public static Set<String> findAllLCS(String X, String Y) {
+        int m = X.length();
+        int n = Y.length();
+        int[][] C = new int[m + 1][n + 1];
+
+        // Fill C table
+        for (int i = 0; i <= m; i++) {
+            for (int j = 0; j <= n; j++) {
+                if (i == 0 || j == 0)
+                    C[i][j] = 0;
+                else if (X.charAt(i - 1) == Y.charAt(j - 1))
+                    C[i][j] = C[i - 1][j - 1] + 1;
+                else
+                    C[i][j] = Math.max(C[i - 1][j], C[i][j - 1]);
+            }
+        }
+
+        return backtrack(C, X, Y, m, n);
+    }
+
+    private static Set<String> backtrack(int[][] C, String X, String Y, int i, int j) {
+        Set<String> result = new HashSet<>();
+
+        if (i == 0 || j == 0) {
+            result.add("");
+            return result;
+        }
+
+        if (X.charAt(i - 1) == Y.charAt(j - 1)) {
+            Set<String> subLCS = backtrack(C, X, Y, i - 1, j - 1);
+            for (String s : subLCS) {
+                result.add(s + X.charAt(i - 1));
+            }
+        } else {
+            if (C[i - 1][j] >= C[i][j - 1]) {
+                result.addAll(backtrack(C, X, Y, i - 1, j));
+            }
+            if (C[i][j - 1] >= C[i - 1][j]) {
+                result.addAll(backtrack(C, X, Y, i, j - 1));
+            }
+        }
+
+        return result;
+    }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -128,8 +135,11 @@ public class LongestCommonSubsequence {
         int lcsLengthDP = lcsLengthDP(X, Y);
         System.out.println("Length of LCS (Dynamic Programming): " + lcsLengthDP);
     
-        int lcsCount = countLCS(X, Y);
-        System.out.println("Number of LCS occurrences: " + lcsCount);
+        Set<String> allLCS = findAllLCS(X, Y);
+        System.out.println("All Longest Common Subsequences:");
+        for (String lcs : allLCS) {
+            System.out.println(lcs);
+        }
     
         scanner.close();
     }
